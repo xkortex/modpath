@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+v0.0.2
+------
+
+* fix to ext behavior, add prefix/suffix manips
 * init travis
 
 v0.0.1
