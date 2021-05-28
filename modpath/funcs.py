@@ -22,6 +22,8 @@ def remap(op: OmniPath, opts: ModpathOptions) -> OmniPath:
 
 def remap_base(
     base: str,
+    new_base: Optional[str] = None,
+    old_base: Optional[str] = None,
     prefix: Optional[str] = None,
     suffix: Optional[str] = None,
     old_prefix: Optional[str] = None,
@@ -33,12 +35,21 @@ def remap_base(
     This should be used after dirname and all extensions are stripped.
     todo: check that things work with both suffix and non-multidot
     :param base: The base/stem of a filename, sans dirname and any extension.
+    :param new_base:
+    :param old_base:
     :param prefix:
     :param suffix:
     :param old_prefix:
     :param old_suffix:
     :return:
     """
+    if new_base is not None:
+        if old_base is not None:
+            if old_base not in base:
+                raise PathOpError("could not match 'old_base' to basename '{}'".format(old_base, base))
+            base = base.replace(old_base, new_base)
+        else:
+            base = new_base
 
     if old_prefix is not None:
         if not base.startswith(old_prefix):
@@ -121,7 +132,16 @@ def segment_path(opts: ModpathOptions) -> OmniPath:
 
     base, ext = splitext(base, multidot=opts.multidot, old_ext=opts.old_ext)
 
-    base = remap_base(base, opts.prefix, opts.suffix, opts.old_prefix, opts.old_suffix)
+    # todo: add old_base
+    base = remap_base(
+        base,
+        new_base=opts.base,
+        old_base=None,
+        prefix=opts.prefix,
+        suffix=opts.suffix,
+        old_prefix=opts.old_prefix,
+        old_suffix=opts.old_suffix,
+    )
 
     op = OmniPath(route=route, base=base, ext=ext, scheme=None)
     return remap(op, opts)
@@ -136,8 +156,13 @@ def segment(opts: ModpathOptions) -> OmniPath:
 
 
 def recombine(op: OmniPath) -> Union[os.PathLike, str]:
-    base = (op.base or '') + (op.ext or '')
+    base = (op.base or "") + (op.ext or "")
     return os.path.join(*op.route, base)
+
+
+def modpath_opt(opts: ModpathOptions) -> Union[os.PathLike, str]:
+    segs = segment(opts)
+    return recombine(segs)
 
 
 def modpath(
@@ -208,4 +233,4 @@ def modpath(
     /spam/eggs/spam.tar
     """
     opts = ModpathOptions(**locals())
-    return recombine(segment_path(opts))
+    return modpath_opt(opts)

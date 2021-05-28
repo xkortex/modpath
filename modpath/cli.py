@@ -1,7 +1,6 @@
 from typing import List, Optional
-from modpath.dtypes import ModpathOptions
-from modpath.funcs import segment, recombine
 from modpath.errors import ArgumentError, PathOpError
+from modpath import modpath_opt, ModpathOptions
 
 
 def check_args(args):
@@ -63,7 +62,11 @@ def modpath_cli():
     # print(opts)
     for opt in opts:
         try:
-            print(recombine(segment(opt)))
+            result = modpath_opt(opt)
+            print(result)
         except PathOpError as exc:
             print("{}: {}".format(exc.__class__.__name__, exc))
             exit(1)
+
+if __name__ == '__main__':
+    modpath_cli()
